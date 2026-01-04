@@ -1,0 +1,72 @@
+# 🚀 Deployment Guide: Redirect Manager Feature
+
+Dokumen ini berisi panduan lengkap untuk men-deploy fitur **Redirect Manager** ke production. Fitur ini memungkinkan admin untuk mengelola redirect URL (404 handling) mirip dengan fitur RankMath.
+
+---
+
+## 📂 1. File Changes (Yang Ditambahkan & Dimodifikasi)
+
+Pastikan file-file berikut ikut ter-push ke repository production.
+
+### ✅ File Baru (Created)
+1.  **Migration**: `database/migrations/2026_01_04_082634_create_redirects_table.php`
+    *   *Fungsi*: Membuat tabel `redirects` di database.
+2.  **Model**: `app/Models/Redirect.php`
+    *   *Fungsi*: Model Eloquent untuk interaksi dengan tabel redirects.
+3.  **Controller**: `app/Http/Controllers/Admin/RedirectController.php`
+    *   *Fungsi*: Menangani logic CRUD (Create, Read, Update, Delete) untuk redirect.
+4.  **View (Blade)**: `resources/views/admin/redirects/index.blade.php`
+    *   *Fungsi*: Container halaman admin untuk memuat Vue component.
+5.  **Vue Component**: `resources/js/Components/Admin/RedirectManager.vue`
+    *   *Fungsi*: Interface utama Redirect Manager (Tabel & Form Responsif).
+
+### 📝 File Dimodifikasi (Modified)
+1.  **`bootstrap/app.php`**
+    *   *Perubahan*: Menambahkan logic `NotFoundHttpException` untuk mengecek database redirect saat user mengakses link mati (404).
+2.  **`routes/web.php`**
+    *   *Perubahan*: Menambahkan route group `/lanyardkilat/redirects` (index, store, update, destroy, list).
+3.  **`config/menu.php`**
+    *   *Perubahan*: Menambahkan menu "Redirects" di bawah submenu "Sistem" pada sidebar admin.
+4.  **`resources/js/admin.js`**
+    *   *Perubahan*: Me-registrasi dan me-mount component `RedirectManager.vue` ke element DOM `#redirect-manager-app`.
+
+---
+
+## 🛠️ 2. Langkah Deployment (Server Production)
+
+Lakukan langkah-langkah ini di terminal server production (SSH) setelah melakukan `git pull`.
+
+### Step 1: Update Database
+Jalankan migrasi untuk membuat tabel `redirects`.
+```bash
+php artisan migrate --force
+```
+
+### Step 2: Build Frontend Assets
+Karena fitur ini menggunakan **Vue.js**, Anda **WAJIB** melakukan build ulang aset frontend agar component baru terbaca oleh browser.
+```bash
+npm install
+npm run build
+```
+*(Catatan: Jika server menggunakan CI/CD, pastikan proses build ini berjalan otomatis).*
+
+### Step 3: Clear Cache
+Pastikan route dan config baru terbaca oleh Laravel.
+```bash
+php artisan optimize:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+---
+
+## 🔍 3. Verifikasi
+Setelah deployment selesai, lakukan pengecekan berikut:
+
+1.  **Menu Admin**: Login ke dashboard admin, cek menu **Sistem > Redirects**. Pastikan halaman terbuka.
+2.  **Fungsi CRUD**: Coba tambah redirect baru (Test), Edit, dan Delete.
+3.  **Fungsi Redirect**: Coba akses Source URL yang baru dibuat. Pastikan Anda diarahkan ke Target URL secara otomatis.
+
+---
+**Status**: ✅ Ready for Production
